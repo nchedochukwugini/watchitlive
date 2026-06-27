@@ -1,0 +1,436 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import "tailwindcss";
+
+/* Hide scrollbars but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #1a2236;
+  --neon-green: #00ff88;
+  --neon-cyan: #00e5ff;
+  --neon-magenta: #ff00ff;
+  --neon-orange: #ff6600;
+  --neon-yellow: #ffe600;
+  --text-primary: #e0e7ff;
+  --text-muted: #8892b0;
+  --pitch-green: #1a4d2e;
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: 'VT323', monospace;
+  --font-mono: 'Press Start 2P', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2222%22%20viewBox%3D%22-2%20-2%20204%20204%22%3E%3Ccircle%20cx%3D%2299.5%22%20cy%3D%2299.5%22%20r%3D%22100%22%20fill%3D%22white%22%2F%3E%3Cpath%20d%3D%22M%20100.4825%2C-1.0125046%20C%2044.983805%2C-1.0125046%20-0.01750007%2C43.9888%20-0.01750007%2C99.4875%20c%200%2C55.49869%2045.00130507%2C100.5%20100.50000007%2C100.5%2055.49869%2C0%20100.5%2C-45.00131%20100.5%2C-100.5%200%2C-55.4987%20-45.00131%2C-100.5000046%20-100.5%2C-100.5000046%20z%20m%200%2C1.00000001%20c%2013.07343%2C0%2025.5343%2C2.54074099%2036.96875%2C7.12499999%200.51279%2C4.9140826%200.3417%2C10.4403036%20-0.5%2C16.4062496%20-12.86446%2C0.696963%20-24.47511%2C3.278067%20-34.84375%2C7.71875%20C%2092.731442%2C25.228512%2080.107785%2C21.58607%2065.4825%2C21.549995%2065.45235%2C15.273255%2065.127365%2C10.299151%2064.51375%2C6.7062454%20C%2075.667764%2C2.3813814%2087.799588%2C-0.01250459%20100.4825%2C-0.01250459%20z%20M%20138.51375%2C7.5499952%20C%20161.6436%2C17.136168%20180.39451%2C35.174378%20190.8575%2C57.831245%20l%20-2.8125%2C3.875%20c%20-6.72387%2C-4.673655%20-15.23098%2C-7.690393%20-23.875%2C-9.6875%20-0.003%2C-0.0049%20-0.0279%2C0.0049%20-0.0312%2C0%20-9.06029%2C-13.503263%20-17.78775%2C-22.927394%20-26.21875%2C-28.25%200.8372%2C-5.87439%201.05592%2C-11.304063%200.59375%2C-16.2187498%20z%20m%20-73.25%2C14.9999998%20c%200.01817%2C-0.0065%200.04433%2C0.0065%200.0625%2C0%2014.538813%2C0.01029%2027.02891%2C3.583582%2036.25%2C9.5%201.92359%2C10.980966%203.54361%2C22.584609%204.84375%2C34.8125%20-15.898417%2C13.251814%20-27.151921%2C23.708107%20-32.5625%2C30.4375%20-12.20437%2C-3.828812%20-23.787735%2C-6.721843%20-34.75%2C-8.6875%20-3.308417%2C-9.263569%20-5.709927%2C-22.475765%20-6.375%2C-38.4375%2010.525567%2C-14.387406%2021.357143%2C-23.614247%2032.53125%2C-27.625%20z%20M%2022.8575%2C49.206245%20c%202.854592%2C0.02365%205.825372%2C0.415028%208.875%2C1.125%200.675045%2C15.965884%203.093205%2C29.217137%206.4375%2C38.59375%20-7.686415%2C10.374295%20-12.23413%2C21.058655%20-13.625%2C32.062505%20-5.92035%2C1.30865%20-12.542072%2C1.74242%20-19.0937501%2C0.4375%20-0.00315%2C-0.005%20-0.028099%2C0.005%20-0.03125%2C0%20-1.208114%2C-1.73868%20-2.231664%2C-3.71759%20-3.125%2C-5.90625%20-0.845%2C-5.21854%20-1.31249997%2C-10.57388%20-1.31249997%2C-16.03125%200%2C-17.878314%204.71629597%2C-34.657373%2012.96875007%2C-49.156255%202.85867%2C-0.775385%205.817392%2C-1.150587%208.90625%2C-1.125%20z%20m%20141.28125%2C3.875%20c%208.48829%2C1.978062%2016.8416%2C4.892726%2023.34375%2C9.40625%207.28908%2C17.891383%2010.61466%2C31.82486%2010%2C41.812505%20-4.63724%2C13.24923%20-11.12514%2C23.2705%20-17.71875%2C29.875%20-9.38154%2C-4.36765%20-17.25751%2C-7.85954%20-23.65625%2C-10.4375%20-0.68757%2C-12.6918%20-3.93309%2C-27.855221%20-9.25%2C-43.812505%206.98224%2C-10.176961%2012.7485%2C-19.116286%2017.28125%2C-26.84375%20z%20M%20107.045%2C67.612495%20c%2012.94851%2C2.635258%2025.89523%2C6.846041%2038.84375%2C12.625%205.31252%2C15.944092%208.55223%2C31.098375%209.21875%2C43.687505%205.3e-4%2C0.0102%20-5.4e-4%2C0.0211%200%2C0.0312%20-9.06096%2C10.91701%20-19.06513%2C19.9558%20-30%2C27.125%20-15.93827%2C-2.65638%20-30.515546%2C-7.26128%20-41.78125%2C-13.21875%20-3.865442%2C-15.50567%20-6.777801%2C-28.81816%20-8.75%2C-39.90625%20C%2079.8574%2C91.366119%2091.117514%2C80.888551%20107.045%2C67.612445%20z%20M%20198.38875%2C104.8%20l%201.4375%2C0.46875%20c%20-1.42085%2C24.81773%20-11.95231%2C47.18278%20-28.28125%2C63.84375%20l%20-2.8125%2C-3.03125%20c%206.42362%2C-11.01279%2010.31439%2C-21.4061%2011.6875%2C-31.15625%206.7023%2C-6.70231%2013.28326%2C-16.80742%2017.96875%2C-30.125%20z%20m%20-173.6875%2C17.21875%20c%204.677616%2C11.69347%2013.17588%2C22.10535%2025.5%2C31.25%200.660713%2C10.52493%202.754257%2C20.38659%207.3125%2C28.40625%20-4.131628%2C0.86101%20-8.655413%2C0.7636%20-13.5625%2C-0.3125%20C%2026.184493%2C169.07096%2012.588583%2C151.15273%205.7949999%2C130.175%20c%20-0.0031%2C-0.009%200.0031%2C-0.0218%200%2C-0.0312%20-0.191728%2C-2.68229%20-0.293138%2C-5.24241%20-0.3125%2C-7.71875%206.6218531%2C1.28202%2013.2690711%2C0.90118%2019.2187501%2C-0.40625%20z%20m%2058.25%2C16.75%20c%2011.307358%2C5.96883%2025.81169%2C10.57522%2041.6875%2C13.25%202.53658%2C8.29869%204.76027%2C16.90444%206.6875%2C25.8125%20-7.206%2C8.49646%20-18.73848%2C14.64101%20-33.843745%2C16.65625%20-14.641571%2C-1.33106%20-27.617873%2C-5.65822%20-38.937505%2C-12.96875%20-4.580118%2C-7.88335%20-6.679515%2C-17.73143%20-7.34375%2C-28.3125%2011.508934%2C-4.50375%2022.093161%2C-9.3164%2031.75%2C-14.4375%20z%20m%2085.125%2C28.0625%202.78125%2C3%20c%20-18.00798%2C18.00842%20-42.89265%2C29.15625%20-70.375%2C29.15625%20-0.827315%2C0%20-1.646275%2C-0.0112%20-2.468745%2C-0.0312%20l%20-0.40625%2C-3.5%20c%2015.324195%2C-2.04362%2027.108225%2C-8.26428%2034.499995%2C-17%2015.44633%2C-0.73269%2027.44017%2C-4.60344%2035.96875%2C-11.625%20z%22%20fill%3D%22%23000%22%2F%3E%3C%2Fsvg%3E") 11 11, auto;
+}
+
+a, button, [role="button"], input[type="submit"], select, label, summary {
+  cursor: inherit !important;
+}
+
+/* Functional inputs keep a real text caret — the novelty ball cursor on a
+   text field is pure friction. */
+input[type="text"], input[type="search"], input[type="email"],
+input[type="number"], input[type="password"], input:not([type]), textarea {
+  cursor: text !important;
+}
+
+:where(a, button, [role="button"], select, summary, label):disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed !important;
+}
+
+/* Respect users who ask for less motion: kill the flicker, glitch, marquees,
+   and pulses, and collapse transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .crt-flicker,
+  .ad-board-track,
+  .ticker-track,
+  .press-start-btn,
+  .prophet-card,
+  .glitch::before,
+  .glitch::after {
+    animation: none !important;
+  }
+}
+
+body {
+  background: var(--bg-primary);
+  background-image: radial-gradient(140% 90% at 50% -10%, #16224a 0%, #0b1226 45%, #060912 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+/* CRT Scanlines overlay */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* CRT flicker */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.97; }
+  15% { opacity: 0.94; }
+  20% { opacity: 0.98; }
+  100% { opacity: 0.97; }
+}
+
+.crt-flicker {
+  animation: flicker 4s infinite;
+}
+
+/* Pixel font headings */
+.font-pixel {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.font-retro {
+  font-family: 'VT323', monospace;
+}
+
+/* Neon glow effects — subtle */
+.glow-green {
+  text-shadow: 0 0 6px rgba(0,255,136,0.4), 0 0 14px rgba(0,255,136,0.15);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 6px rgba(0,229,255,0.4), 0 0 14px rgba(0,229,255,0.15);
+}
+
+.glow-magenta {
+  text-shadow: 0 0 6px rgba(255,0,255,0.4), 0 0 14px rgba(255,0,255,0.15);
+}
+
+/* Card styling — SNES-style with inset shadow depth */
+.card-retro {
+  background: linear-gradient(180deg, rgba(19, 35, 63, 0.92) 0%, rgba(13, 24, 48, 0.92) 100%);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(6, 10, 20, 0.8);
+  border-radius: 2px;
+  transition: all 0.25s ease;
+  box-shadow:
+    inset 2px 2px 0 rgba(47, 64, 104, 0.3),
+    inset -1px -1px 0 rgba(6, 10, 20, 0.4),
+    0 4px 0 rgba(4, 6, 14, 0.5),
+    0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.card-retro:hover {
+  border-color: rgba(0, 229, 255, 0.25);
+  box-shadow:
+    inset 2px 2px 0 rgba(47, 64, 104, 0.35),
+    inset -1px -1px 0 rgba(6, 10, 20, 0.4),
+    0 4px 0 rgba(4, 6, 14, 0.5),
+    0 0 20px rgba(0, 229, 255, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan);
+  border-radius: 3px;
+}
+
+/* Ad board strip */
+.ad-board {
+  background: var(--pitch-green);
+  border-top: 1px solid var(--neon-green);
+  border-bottom: 1px solid var(--neon-green);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Seamless marquee — track holds 2 identical copies; moving exactly one copy
+   width (-50%) keeps content visible at all times with no off-screen lag. */
+@keyframes marquee-loop {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ad-board-track {
+  display: inline-flex;
+  animation: marquee-loop 60s linear infinite;
+}
+
+.ad-board:hover .ad-board-track {
+  animation-play-state: paused;
+  cursor: default;
+}
+
+.ad-board-copy {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--neon-green);
+  letter-spacing: 1px;
+}
+
+/* Match ticker — same seamless technique as ad-board */
+.ticker-track {
+  display: inline-flex;
+  animation: marquee-loop 200s linear infinite;
+}
+
+.ticker-copy {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Button styles — SNES depth with glow */
+.btn-neon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  padding: 12px 24px;
+  border: 2px solid var(--neon-cyan);
+  background: rgba(0, 245, 255, 0.08);
+  color: var(--neon-cyan);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.15), inset 0 0 12px rgba(0, 245, 255, 0.04);
+}
+
+.btn-neon:hover {
+  background: rgba(0, 245, 255, 0.18);
+  box-shadow: 0 0 24px rgba(0, 245, 255, 0.3), inset 0 0 16px rgba(0, 245, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.btn-neon:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.2);
+}
+
+.btn-neon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-neon:disabled:hover {
+  background: transparent;
+  color: var(--neon-cyan);
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-lock {
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.08);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.15), inset 0 0 12px rgba(0, 255, 136, 0.04);
+}
+
+.btn-lock:hover {
+  background: rgba(0, 255, 136, 0.18);
+  box-shadow: 0 0 24px rgba(0, 255, 136, 0.3), inset 0 0 16px rgba(0, 255, 136, 0.06);
+}
+
+/* Prophet moment */
+@keyframes prophet-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+
+.prophet-card {
+  animation: prophet-pulse 2s ease-in-out infinite;
+}
+
+/* Section header accent bar */
+.section-header {
+  position: relative;
+  padding-left: 12px;
+}
+.section-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 80%;
+  background: var(--neon-cyan);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
+/* Stat badge — used in player/agent cards */
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gold/green/default stat coloring */
+.stat-gold { color: var(--gold); border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.08); }
+.stat-green { color: var(--neon-green); border-color: rgba(0, 255, 136, 0.3); background: rgba(0, 255, 136, 0.08); }
+
+/* Hero card — large mode selector cards on landing */
+.card-hero {
+  background: linear-gradient(180deg, rgba(19, 35, 63, 0.95) 0%, rgba(13, 24, 48, 0.95) 100%);
+  backdrop-filter: blur(8px);
+  border: 3px solid rgba(6, 10, 20, 0.8);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  box-shadow:
+    inset 3px 3px 0 rgba(47, 64, 104, 0.3),
+    inset -2px -2px 0 rgba(6, 10, 20, 0.5),
+    0 6px 0 rgba(4, 6, 14, 0.5),
+    0 10px 22px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+.card-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%);
+  pointer-events: none;
+}
+.card-hero:hover {
+  border-color: rgba(0, 245, 255, 0.3);
+  box-shadow:
+    inset 3px 3px 0 rgba(47, 64, 104, 0.35),
+    inset -2px -2px 0 rgba(6, 10, 20, 0.5),
+    0 6px 0 rgba(4, 6, 14, 0.5),
+    0 0 16px rgba(0, 245, 255, 0.15),
+    0 10px 30px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Category badge on cards */
+.badge-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 3px 8px;
+  border: 1px solid;
+  letter-spacing: 1px;
+}
+
+
+/* Outcome badge */
+.outcome-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.outcome-home { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
+.outcome-draw { background: rgba(255, 230, 0, 0.2); color: var(--neon-yellow); }
+.outcome-away { background: rgba(255, 0, 255, 0.2); color: var(--neon-magenta); }
+.outcome-correct { background: rgba(0, 255, 136, 0.3); border: 1px solid var(--neon-green); }
+.outcome-wrong { background: rgba(255, 50, 50, 0.2); border: 1px solid #ff3232; color: #ff6666; }
+
+/* ─── Glitch wordmark (used by PressStart) ─────────────────────────────── */
+.glitch { position: relative; display: inline-block; }
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.glitch::before {
+  color: var(--neon-cyan);
+  transform: translate(-2px, 0);
+  mix-blend-mode: screen;
+  clip-path: inset(0 0 55% 0);
+  animation: glitch-top 2.6s infinite steps(8, end);
+}
+.glitch::after {
+  color: var(--neon-magenta);
+  transform: translate(2px, 0);
+  mix-blend-mode: screen;
+  clip-path: inset(55% 0 0 0);
+  animation: glitch-bot 2.8s infinite steps(8, end);
+}
+@keyframes glitch-top {
+  0%, 92%, 100% { transform: translate(-2px, 0); }
+  93% { transform: translate(-5px, -1px); }
+  95% { transform: translate(3px, 2px); }
+  97% { transform: translate(-2px, 1px); }
+}
+@keyframes glitch-bot {
+  0%, 90%, 100% { transform: translate(2px, 0); }
+  91% { transform: translate(5px, 1px); }
+  94% { transform: translate(-3px, -2px); }
+  96% { transform: translate(2px, -1px); }
+}
+
+/* ─── PRESS START arcade button pulse ─────────────────────────────────── */
+.press-start-btn {
+  position: relative;
+  background: rgba(0, 255, 136, 0.05);
+  box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7), inset 0 0 20px rgba(0, 255, 136, 0.15);
+  animation: press-pulse 1.4s ease-in-out infinite;
+  transition: background 0.15s, color 0.15s;
+}
+.press-start-btn:hover {
+  background: var(--neon-green);
+  color: var(--bg-primary) !important;
+  animation: none;
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+}
+@keyframes press-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.15); }
+  50% { box-shadow: 0 0 25px 8px rgba(0, 255, 136, 0.0), inset 0 0 25px rgba(0, 255, 136, 0.3); }
+}
