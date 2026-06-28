@@ -99,6 +99,33 @@ export default function GlobalPage() {
             </div>
           )}
 
+          {/* Live Matches */}
+          {matches.filter(m => m.status === 'live').length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="font-pixel text-[9px] sm:text-xs text-[var(--neon-green)] flex items-center gap-2">
+                  <span className="w-2 h-2 bg-[var(--neon-green)] rounded-full" style={{animation: 'pulse-dot 1s infinite'}} />
+                  LIVE MATCHES
+                </h2>
+                <span className="font-pixel text-[7px] sm:text-[8px] text-[var(--neon-green)]">
+                  {matches.filter(m => m.status === 'live').length} LIVE
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {matches.filter(m => m.status === 'live').map((match, i) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    onPick={setPickingMatch}
+                    userPick={getUserPick(match.id)}
+                    index={i}
+                    odds={oddsMap[match.id]}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Upcoming */}
           {upcomingMatches.length > 0 && (
             <section>
