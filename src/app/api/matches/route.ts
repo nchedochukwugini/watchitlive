@@ -17,11 +17,14 @@ const CACHE_TTL = 60_000;
 const LIVE_STATES  = new Set(['H1','H2','ET1','ET2','PE','HT']);
 const FINAL_STATES = new Set(['F','FET','FPE']);
 
-function deriveStatus(gameState: string, startTime: string): MatchStatus {
+function deriveStatus(gameState: string, startTime: string | number): MatchStatus {
   if (FINAL_STATES.has(gameState)) return 'final';
   if (LIVE_STATES.has(gameState))  return 'live';
-  const kickoffMs = new Date(startTime).getTime();
-  if (Date.now() >= kickoffMs)     return 'live';
+  // Handle both ISO strings and Unix timestamps (ms)
+  const ts = typeof startTime === 'number' ? startTime
+    : /^\d{10,}$/.test(String(startTime)) ? parseInt(startTime)
+    : new Date(startTime).getTime();
+  if (Date.now() >= ts) return 'live';
   return 'upcoming';
 }
 
@@ -62,7 +65,9 @@ export async function GET() {
 
         // If worldcup26 has this match as finished, use that status
         const isFinished = wcMatch?.finished === 'TRUE';
+        const isWcLive    = wcMatch?.time_elapsed === 'live';
         const status: MatchStatus = isFinished ? 'final'
+          : isWcLive ? 'live'
           : deriveStatus(f.GameState || 'NS', f.StartTime || '');
 
         return {
@@ -70,9 +75,9 @@ export async function GET() {
           homeTeam,
           awayTeam,
           group:       f.GroupName || wcMatch?.group || undefined,
-          kickoffTime: f.StartTime || new Date().toISOString(),
+          kickoffTime: typeof f.StartTime === 'number' ? new Date(f.StartTime).toISOString() : (f.StartTime || new Date().toISOString()),
           status,
-          result:      isFinished ? {
+          result:      (isFinished || isWcLive) && wcMatch ? {
             home: parseInt(wcMatch.home_score) || 0,
             away: parseInt(wcMatch.away_score) || 0,
           } : undefined,
