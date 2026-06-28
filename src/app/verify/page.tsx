@@ -47,7 +47,7 @@ export default function VerifyPage() {
           <span>🔍</span> VERIFY PREDICTION
         </h1>
         <p className="font-retro text-sm sm:text-lg text-[var(--text-muted)]">
-          Paste a Solana transaction hash to prove a prediction was locked before kickoff.
+          Paste a Solana tx signature to verify a pick, or enter a fixture ID to verify a match score on-chain using TxLINE Merkle proofs.
         </p>
       </motion.div>
 
@@ -58,7 +58,7 @@ export default function VerifyPage() {
         className="card-retro p-4 sm:p-6 border-t-3! border-t-[var(--neon-green)]/40!"
       >
         <label className="font-pixel text-[8px] sm:text-[9px] text-[var(--neon-cyan)] tracking-widest mb-3 block">
-          ROOT HASH
+          SOLANA TX SIGNATURE
         </label>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <input

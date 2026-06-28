@@ -92,3 +92,26 @@ export const AGENTS: Predictor[] = [
     avatar: '🚀',
   },
 ];
+
+export interface LiveOdds {
+  home:        number;
+  draw?:       number;
+  away:        number;
+  lastUpdate:  number;
+  gameState?:  string;
+  homePct?:    number;
+  drawPct?:    number;
+  awayPct?:    number;
+  priceNames?: string[];
+  allMarkets?: MarketOdds[];
+}
+
+export interface MarketOdds {
+  market:     string;
+  prices:     number[];
+  pct:        string[];
+  names:      string[];
+  gameState?: string;
+  inRunning?: boolean;
+}
+

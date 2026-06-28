@@ -144,7 +144,7 @@ export function PickModal({ match, onClose }: PickModalProps) {
                 </p>
                 {storageResult?.demo && (
                   <p className="font-pixel text-[9px] text-[var(--neon-yellow)] tracking-widest leading-relaxed px-2">
-                    ⚠ DEMO HASH — set PRIVATE_KEY to anchor for real
+                    ⚠ DEMO MODE — on-chain tx unavailable
                   </p>
                 )}
 

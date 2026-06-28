@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadPickToStorage } from '@/lib/storage';
 
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body   = await req.json();
     const result = await uploadPickToStorage(body);
-
     return NextResponse.json({
       rootHash:    result.rootHash,
       explorerUrl: result.explorerUrl,

@@ -10,25 +10,20 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { ProphetMoment } from '@/components/ProphetMoment';
 import { Match } from '@/lib/types';
 import { isProphetMoment } from '@/lib/scoring';
+import { useLiveOdds } from '@/hooks/useLiveOdds';
 
-const MATCH_PAGE = 6;
+const MATCH_PAGE  = 6;
 const RESULT_PAGE = 4;
 
 export default function GlobalPage() {
   const { matches, picks, predictors, walletAddress, getUserPick } = useApp();
-  const [pickingMatch, setPickingMatch] = useState<Match | null>(null);
-  const [prophetData, setProphetData] = useState<{ pickId: string } | null>(null);
+  const [pickingMatch, setPickingMatch]     = useState<Match | null>(null);
+  const [prophetData, setProphetData]       = useState<{ pickId: string } | null>(null);
   const [upcomingVisible, setUpcomingVisible] = useState(MATCH_PAGE);
-  const [resultsVisible, setResultsVisible] = useState(RESULT_PAGE);
+  const [resultsVisible, setResultsVisible]   = useState(RESULT_PAGE);
 
-  const upcomingMatches = useMemo(
-    () => matches.filter((m) => m.status === 'upcoming'),
-    [matches]
-  );
-  const finishedMatches = useMemo(
-    () => matches.filter((m) => m.status === 'final'),
-    [matches]
-  );
+  const upcomingMatches = useMemo(() => matches.filter((m) => m.status === 'upcoming'), [matches]);
+  const finishedMatches = useMemo(() => matches.filter((m) => m.status === 'final'),    [matches]);
 
   const leaderboard = useMemo(
     () => buildLeaderboard(predictors, picks, matches),
@@ -37,15 +32,17 @@ export default function GlobalPage() {
 
   const userId = walletAddress || 'anon';
 
-  // Auto-detect prophet moments on finished matches
+  // Fetch live TxLINE odds for all fixtures
+  const fixtureIds = useMemo(() => matches.map((m) => m.id), [matches]);
+  const oddsMap    = useLiveOdds(fixtureIds);
+
+  // Prophet moments
   const [checkedMatches, setCheckedMatches] = useState<Set<string>>(new Set());
 
   const checkProphetMoments = () => {
     for (const match of finishedMatches) {
       if (checkedMatches.has(match.id)) continue;
-      const userPick = picks.find(
-        (p) => p.predictorId === userId && p.matchId === match.id
-      );
+      const userPick = picks.find((p) => p.predictorId === userId && p.matchId === match.id);
       if (userPick && isProphetMoment(userPick, match)) {
         setProphetData({ pickId: userPick.id });
         setCheckedMatches((prev) => new Set(prev).add(match.id));
@@ -59,15 +56,9 @@ export default function GlobalPage() {
     checkProphetMoments();
   }
 
-  const prophetPick = prophetData
-    ? picks.find((p) => p.id === prophetData.pickId)
-    : null;
-  const prophetMatch = prophetPick
-    ? matches.find((m) => m.id === prophetPick.matchId)
-    : null;
-  const prophetPredictor = prophetPick
-    ? predictors.find((p) => p.id === prophetPick.predictorId)
-    : null;
+  const prophetPick      = prophetData ? picks.find((p) => p.id === prophetData.pickId) : null;
+  const prophetMatch     = prophetPick ? matches.find((m) => m.id === prophetPick.matchId) : null;
+  const prophetPredictor = prophetPick ? predictors.find((p) => p.id === prophetPick.predictorId) : null;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
@@ -83,23 +74,27 @@ export default function GlobalPage() {
         <p className="font-retro text-xs sm:text-base text-[var(--text-muted)]">
           Beat the AI. Prove your foresight on-chain.
         </p>
+        {Object.keys(oddsMap).length > 0 && (
+          <p className="font-pixel text-[7px] text-[var(--neon-cyan)]/60 mt-1 tracking-widest">
+            📡 TXLINE LIVE ODDS · {Object.keys(oddsMap).length} FIXTURES
+          </p>
+        )}
       </motion.div>
 
-      {/* Leaderboard — shown first on mobile */}
+      {/* Leaderboard — mobile */}
       <div className="lg:hidden mb-4">
         <Leaderboard entries={leaderboard} highlightId={userId} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        {/* Matches column */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          {/* Empty state */}
+
           {upcomingMatches.length === 0 && finishedMatches.length === 0 && (
             <div className="card-retro p-8 sm:p-10 flex flex-col items-center text-center">
               <span className="text-4xl sm:text-5xl mb-3 sm:mb-4 opacity-80">📡</span>
               <h2 className="font-pixel text-[9px] sm:text-xs text-[var(--neon-cyan)] mb-2">LOADING FIXTURES…</h2>
               <p className="font-retro text-sm sm:text-base text-[var(--text-muted)] max-w-xs">
-                Pulling the World Cup 2026 schedule. If nothing appears, the match feed is offline — check back shortly.
+                Pulling the World Cup 2026 schedule from TxLINE. Check back shortly.
               </p>
             </div>
           )}
@@ -124,6 +119,7 @@ export default function GlobalPage() {
                     onPick={setPickingMatch}
                     userPick={getUserPick(match.id)}
                     index={i}
+                    odds={oddsMap[match.id]}
                   />
                 ))}
               </div>
@@ -132,7 +128,7 @@ export default function GlobalPage() {
                   {upcomingVisible < upcomingMatches.length ? (
                     <button
                       onClick={() => setUpcomingVisible((c) => c + MATCH_PAGE)}
-                      className="font-pixel text-[8px] sm:text-[9px] text-[var(--neon-cyan)] border-2 border-[var(--neon-cyan)]/30 px-4 sm:px-6 py-2 hover:bg-[var(--neon-cyan)]/10 transition-colors shadow-[0_2px_0_rgba(0,229,255,0.15)]"
+                      className="font-pixel text-[8px] sm:text-[9px] text-[var(--neon-cyan)] border-2 border-[var(--neon-cyan)]/30 px-4 sm:px-6 py-2 hover:bg-[var(--neon-cyan)]/10 transition-colors"
                     >
                       VIEW MORE ({upcomingMatches.length - upcomingVisible} left)
                     </button>
@@ -153,9 +149,7 @@ export default function GlobalPage() {
           {finishedMatches.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="font-pixel text-[9px] sm:text-xs text-[var(--text-muted)]">
-                  RESULTS
-                </h2>
+                <h2 className="font-pixel text-[9px] sm:text-xs text-[var(--text-muted)]">RESULTS</h2>
                 <span className="font-pixel text-[7px] sm:text-[8px] text-[var(--text-muted)]">
                   {Math.min(resultsVisible, finishedMatches.length)}/{finishedMatches.length}
                 </span>
@@ -168,6 +162,7 @@ export default function GlobalPage() {
                     onPick={setPickingMatch}
                     userPick={getUserPick(match.id)}
                     index={i}
+                    odds={oddsMap[match.id]}
                   />
                 ))}
               </div>
@@ -176,7 +171,7 @@ export default function GlobalPage() {
                   {resultsVisible < finishedMatches.length ? (
                     <button
                       onClick={() => setResultsVisible((c) => c + RESULT_PAGE)}
-                      className="font-pixel text-[8px] sm:text-[9px] text-[var(--neon-cyan)] border-2 border-[var(--neon-cyan)]/30 px-4 sm:px-6 py-2 hover:bg-[var(--neon-cyan)]/10 transition-colors shadow-[0_2px_0_rgba(0,229,255,0.15)]"
+                      className="font-pixel text-[8px] sm:text-[9px] text-[var(--neon-cyan)] border-2 border-[var(--neon-cyan)]/30 px-4 sm:px-6 py-2 hover:bg-[var(--neon-cyan)]/10 transition-colors"
                     >
                       VIEW MORE ({finishedMatches.length - resultsVisible} left)
                     </button>
@@ -194,7 +189,7 @@ export default function GlobalPage() {
           )}
         </div>
 
-        {/* Leaderboard — desktop sidebar, sticky */}
+        {/* Leaderboard — desktop */}
         <div className="hidden lg:block">
           <div className="sticky top-16">
             <Leaderboard entries={leaderboard} highlightId={userId} />
@@ -202,10 +197,7 @@ export default function GlobalPage() {
         </div>
       </div>
 
-      {/* Pick modal */}
       <PickModal match={pickingMatch} onClose={() => setPickingMatch(null)} />
-
-      {/* Prophet moment overlay */}
       <ProphetMoment
         show={!!prophetData}
         pick={prophetPick || null}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { TxLineSignal } from '@/lib/txline';
+import { fireSignalToast } from '@/components/SignalToast';
 import { parseOddsSSE } from '@/lib/txline';
 import { useApp } from '@/lib/store';
 
@@ -56,6 +57,7 @@ export function TxLineFeed() {
         if (signal) {
           addSignal(signal);
           emitSignal(signal);
+          fireSignalToast(signal);
         }
       };
     }
