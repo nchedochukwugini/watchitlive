@@ -37,33 +37,68 @@ export function TxLineFeed() {
     return () => { signalListeners = signalListeners.filter((fn) => fn !== addSignal); };
   }, [addSignal]);
 
-  // Connect to TxLINE SSE via Next.js proxy
+  // Connect to TxLINE SSE directly from browser
   useEffect(() => {
-    function connect() {
-      if (esRef.current) esRef.current.close();
-      const es = new EventSource('/api/txline?stream=odds');
-      esRef.current = es;
+    let es: EventSource | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-      es.onopen  = () => setConnected(true);
-      es.onerror = () => {
-        setConnected(false);
-        es.close();
-        setTimeout(connect, 5000);
-      };
+    async function connect() {
+      try {
+        // Get credentials from our API
+        const res  = await fetch('/api/txline');
+        const creds = await res.json();
+        const url  = `${creds.apiBase}/api/odds/stream`;
 
-      es.onmessage = (e) => {
-        if (!e.data || e.data === '[HEARTBEAT]') return;
-        const signal = parseOddsSSE(e.data, fixtureMap.current);
-        if (signal) {
-          addSignal(signal);
-          emitSignal(signal);
-          fireSignalToast(signal);
+        if (es) es.close();
+
+        // Use fetch-based SSE since EventSource doesn't support custom headers
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${creds.jwt}`,
+            'X-Api-Token':   creds.token,
+            'Accept':        'text/event-stream',
+            'Cache-Control': 'no-cache',
+          },
+        });
+
+        if (!response.ok || !response.body) throw new Error('Stream failed');
+        setConnected(true);
+
+        const reader  = response.body.getReader();
+        const decoder = new TextDecoder();
+        let   buffer  = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              const raw = line.slice(5).trim();
+              if (raw && raw !== '[HEARTBEAT]') {
+                const signal = parseOddsSSE(raw, fixtureMap.current);
+                if (signal) {
+                  addSignal(signal);
+                  emitSignal(signal);
+                  fireSignalToast(signal);
+                }
+              }
+            }
+          }
         }
-      };
+      } catch {
+        setConnected(false);
+        retryTimer = setTimeout(connect, 5000);
+      }
     }
 
     connect();
-    return () => esRef.current?.close();
+    return () => {
+      if (es) es.close();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [addSignal]);
 
   const recentCount = signals.filter((s) => Date.now() - s.ts < 30000).length;
