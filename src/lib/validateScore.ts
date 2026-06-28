@@ -130,7 +130,7 @@ export async function validateScoreOnChain(fixtureId: string): Promise<Validatio
 
     // Derive dummy wallet for read-only provider
     const dummyKeypair = anchor.web3.Keypair.generate();
-    const wallet       = new anchor.Wallet(dummyKeypair);
+    const wallet       = { publicKey: dummyKeypair.publicKey, signTransaction: async (tx: any) => tx, signAllTransactions: async (txs: any) => txs };
     const provider     = new anchor.AnchorProvider(connection, wallet, { commitment: 'confirmed' });
     const program      = new anchor.Program(IDL, provider);
 
