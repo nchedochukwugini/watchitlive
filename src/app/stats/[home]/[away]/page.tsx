@@ -136,6 +136,9 @@ export default function MatchStatsPage() {
               <span className="font-pixel text-[7px] text-[var(--text-muted)] tracking-widest">
                 {match?.stage?.replace(/_/g,' ').toUpperCase()} · {match?.date}
               </span>
+              {match?.source === 'txline' && (
+                <span className="font-pixel text-[6px] text-[var(--neon-cyan)] tracking-widest">📡 LIVE · TXLINE</span>
+              )}
             </div>
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1 text-center">
