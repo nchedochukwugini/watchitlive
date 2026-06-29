@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Match, Pick, LiveOdds } from '@/lib/types';
 import { CountdownTimer } from './CountdownTimer';
@@ -18,6 +19,31 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, onPick, userPick, index, odds }: MatchCardProps) {
+  // Poll live score every 30s for live matches
+  const [liveMinute, setLiveMinute] = useState<number | null>(match.minute || null);
+  const [liveScore, setLiveScore]   = useState(match.result);
+
+  useEffect(() => {
+    if (match.status !== 'live') return;
+    const poll = async () => {
+      try {
+        const res  = await fetch(`/api/live-score?fixtureId=${match.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.minute) setLiveMinute(data.minute);
+        if (data.homeScore !== undefined) {
+          setLiveScore({ home: data.homeScore, away: data.awayScore });
+        }
+      } catch {}
+    };
+    poll();
+    const timer = setInterval(poll, 30000);
+    return () => clearInterval(timer);
+  }, [match.id, match.status]);
+
+  const displayScore  = liveScore || match.result;
+  const displayMinute = liveMinute || match.minute;
+
   const isLocked     = match.status !== 'upcoming';
   const isFinal      = match.status === 'final';
   const isLive       = match.status === 'live';
@@ -63,7 +89,7 @@ export function MatchCard({ match, onPick, userPick, index, odds }: MatchCardPro
       <div className="flex items-center justify-between gap-2">
         <TeamBadge name={match.homeTeam} />
         <div className="text-center shrink-0 px-1">
-          {isFinal && match.result ? (
+          {isFinal && displayScore ? (
             <div className="font-pixel text-lg sm:text-2xl text-[var(--neon-green)] tabular-nums">
               {match.result.home} - {match.result.away}
             </div>
