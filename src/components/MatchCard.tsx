@@ -24,7 +24,10 @@ export function MatchCard({ match, onPick, userPick, index, odds }: MatchCardPro
   const [liveScore, setLiveScore]   = useState(match.result);
 
   useEffect(() => {
-    if (match.status !== 'live') return;
+    // Poll if status is live OR if match started within last 3 hours
+    const startedAgo = Date.now() - new Date(match.kickoffTime).getTime();
+    const probablyLive = match.status === 'live' || (startedAgo > 0 && startedAgo < 3 * 60 * 60 * 1000);
+    if (!probablyLive || match.id.startsWith('wc-')) return;
     const poll = async () => {
       try {
         const res  = await fetch(`/api/live-score?fixtureId=${match.id}`);

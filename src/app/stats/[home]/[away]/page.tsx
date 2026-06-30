@@ -150,7 +150,7 @@ export default function MatchStatsPage() {
                   {match?.homeScore ?? '—'} - {match?.awayScore ?? '—'}
                 </div>
                 <div className="font-pixel text-[7px] text-[var(--text-muted)] mt-1">
-                  {match?.status === 'finished' ? 'FULL TIME' : match?.liveMinute ? `${match.liveMinute}'` : 'UPCOMING'}
+                  {['F','FET','FPE'].includes(match?.gameState) ? 'FULL TIME' : ['H1','H2','ET1','ET2','HT','PE'].includes(match?.gameState) ? (match?.liveMinute ? `${match.liveMinute}'` : match?.gameState) : 'UPCOMING'}
                 </div>
               </div>
               <div className="flex-1 text-center">
