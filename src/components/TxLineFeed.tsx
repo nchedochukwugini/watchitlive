@@ -37,38 +37,26 @@ export function TxLineFeed() {
     return () => { signalListeners = signalListeners.filter((fn) => fn !== addSignal); };
   }, [addSignal]);
 
-  // Connect to TxLINE SSE directly from browser
+  // Connect to TxLINE SSE via Next.js proxy
   useEffect(() => {
-    let es: EventSource | null = null;
+    let reader: ReadableStreamDefaultReader | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
 
     async function connect() {
       try {
-        // Get credentials from our API
-        const res  = await fetch('/api/txline');
-        const creds = await res.json();
-        const url  = `${creds.apiBase}/api/odds/stream`;
-
-        if (es) es.close();
-
-        // Use fetch-based SSE since EventSource doesn't support custom headers
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${creds.jwt}`,
-            'X-Api-Token':   creds.token,
-            'Accept':        'text/event-stream',
-            'Cache-Control': 'no-cache',
-          },
+        const response = await fetch('/api/txline?stream=odds', {
+          headers: { 'Accept': 'text/event-stream', 'Cache-Control': 'no-cache' },
         });
 
         if (!response.ok || !response.body) throw new Error('Stream failed');
         setConnected(true);
 
-        const reader  = response.body.getReader();
+        reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let   buffer  = '';
+        let buffer = '';
 
-        while (true) {
+        while (active) {
           const { value, done } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
@@ -89,6 +77,7 @@ export function TxLineFeed() {
           }
         }
       } catch {
+        if (!active) return;
         setConnected(false);
         retryTimer = setTimeout(connect, 5000);
       }
@@ -96,7 +85,8 @@ export function TxLineFeed() {
 
     connect();
     return () => {
-      if (es) es.close();
+      active = false;
+      reader?.cancel();
       if (retryTimer) clearTimeout(retryTimer);
     };
   }, [addSignal]);
