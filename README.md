@@ -21,6 +21,9 @@
   <a href="https://earn.superteam.fun">Built for the TxODDS x Superteam World Cup Hackathon 2026</a> 🏆
 </p>
 
+🌐 **Live:** https://watchitlive.vercel.app
+📦 **GitHub:** https://github.com/nchedochukwugini/watchitlive
+
 ---
 
 ## The Problem 🤔
@@ -34,7 +37,7 @@ WatchItLive solves this by combining real-time TxLINE odds intelligence with on-
 1. **Live odds stream** from TxLINE's consensus sharp bookmaker feed via SSE ⏰
 2. **Sharp signal detection** fires when implied probability shifts ≥4% — classifying by market, direction, game phase, and strength 🔒
 3. **Every pick is anchored on Solana devnet** via memo transactions — a verifiable, immutable proof that your call was locked before kickoff 📜
-4. **Six AI agents** analyze every fixture with unique strategies, creating a benchmark you compete against 🤖
+4. **Six AI agents** analyze every fixture with TxLINE live odds context, creating a benchmark you compete against 🤖
 
 No edits. No deletions. No "I told you so" without proof. 🎯
 
@@ -44,140 +47,193 @@ No edits. No deletions. No "I told you so" without proof. 🎯
 
 This project leverages TxLINE's full data stack:
 
-### Live Odds Stream 📊
-
-Every World Cup fixture is streamed in real time via TxLINE's SSE endpoint. The odds engine:
-
-1. Subscribes to `/api/odds/stream` for live 1X2 odds updates 📡
-2. Tracks implied probability per `(fixtureId, market)` over a rolling window 📈
-3. Fires a **sharp signal** when `|newProb - baselineProb| / baselineProb ≥ 0.04` 🚨
-4. Classifies signals by game phase (H1, HT, H2, ET, PE) and strength (1–5 stars) ⭐
-5. Proxies the stream through a Next.js API route to the frontend via SSE 🔄
-
-### Live Scores Stream ⚽
-
-Subscribes to `/api/scores/stream` for real-time goal events, game phase updates, and match minutes. Score changes trigger animated goal flashes in the UI.
-
-### On-Chain Subscription 🔗
-
-Service Level 1 subscription registered on Solana devnet via the TxLINE program (`6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`). Every pick is anchored using a Solana memo instruction storing the SHA-256 hash of the pick payload. See [`storage.ts`](src/lib/storage.ts).
-
 ### TxLINE Endpoints Used
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /auth/guest/start` | Guest JWT |
-| `POST /api/token/activate` | API token activation |
-| `GET /api/fixtures/snapshot` | All World Cup fixtures |
-| `GET /api/odds/stream` (SSE) | Live odds stream |
-| `GET /api/scores/stream` (SSE) | Live scores + game phase |
+| `POST /auth/guest/start` | Guest JWT authentication |
+| `POST /api/token/activate` | Service Level 1 activation on Solana devnet |
+| `GET /api/fixtures/snapshot` | All World Cup 2026 fixtures (filtered CompetitionId: 72) |
+| `GET /api/odds/stream` (SSE) | Real-time live odds stream — powers signal detector + ticker |
+| `GET /api/odds/snapshot/:fixtureId` | Per-fixture 1X2 odds with de-margined Pct probabilities |
+| `GET /api/scores/stream` (SSE) | Real-time scores stream — live minute, goals, cards, corners |
+| `GET /api/scores/snapshot/:fixtureId` | Live match stats — Score object with H1/HT/H2/Total per participant |
+| `GET /api/scores/stat-validation` | Merkle proof data for on-chain score verification |
+| TxLINE Solana Program | `validateStat` instruction — cryptographic score anchoring |
+
+**TxLINE Solana Program ID:** `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`
+**Service Level 1** activated on Solana devnet
+
+### Live Odds Stream 📊
+
+Every World Cup fixture is streamed in real time via TxLINE's SSE endpoint:
+
+1. Subscribes to `/api/odds/stream` for live 1X2 odds updates 📡
+2. Parses `SuperOddsType: 1X2_PARTICIPANT_RESULT` — prices stored as integers ×1000
+3. Uses TxLINE `Pct` field for de-margined implied probabilities
+4. Tracks probability per `(fixtureId, market)` in browser memory as baseline
+5. Fires a **sharp signal** when `|newProb - baselineProb| >= 0.04` (4 percentage points)
+6. Classifies signals by game phase using TxLINE `StatusId` field
+7. Proxied through Next.js API route to handle CORS
+
+### Live Scores Stream ⚽
+
+Subscribes to `/api/scores/stream` for real-time updates:
+- Goal events with `Score.Participant1/2.Total.Goals`
+- Game phase from `StatusId` (2=H1, 3=HT, 4=H2, 5=F, 12=PE)
+- Live clock from `Clock.Seconds` — calculates minute displayed on match cards
+- Corners, yellow cards, red cards per half from Score object
+
+### TxLINE StatusId Mapping
+
+| StatusId | Phase | Description |
+|---|---|---|
+| 1 | NS | Not Started |
+| 2 | H1 | First Half |
+| 3 | HT | Half Time |
+| 4 | H2 | Second Half |
+| 5 | F | Full Time |
+| 7 | ET1 | Extra Time First Half |
+| 9 | ET2 | Extra Time Second Half |
+| 10 | FET | Full Time After Extra Time |
+| 12 | PE | Penalty Shootout |
+| 13 | FPE | Full Time After Penalties |
+
+### On-Chain Subscription 🔗
+
+Service Level 1 subscription registered on Solana devnet via the TxLINE program. Every wallet-connected pick is anchored using a Solana memo instruction storing the SHA-256 hash of the pick payload.
+
+### TxLINE Merkle Score Verification
+
+- Fetches Merkle proof from `/api/scores/stat-validation?fixtureId=X&seq=Y&statKey=1&statKey2=2`
+- Derives Daily Scores PDA: seeds `["daily_scores_roots", epochDay as u16 LE]`
+- Calls `validateStat` on TxLINE program with fixture summary, proof nodes, and stat terms
+- Returns cryptographic proof that the score is real and anchored on-chain
 
 ---
 
 ## Features 🎮
 
-### Live Odds Dashboard 📡
-Real-time 1X2 odds for all 104 World Cup matches streamed directly from TxLINE. Odds animate on every update. Live matches glow. Tap any fixture for full detail.
+### ⚡ Sharp Movement Detector
+- Monitors TxLINE odds every 60 seconds via SSE stream (client-side persistent baseline)
+- Fires when implied probability shifts ≥4 percentage points on any fixture
+- Classifies: direction (▲/▼), strength (1-5★), game phase, market (HOME/AWAY)
+- Predicts winner based on money direction — tracks accuracy vs actual outcomes
+- Toast notifications slide in automatically — no refresh needed
+- Signal log with outcome tracking and accuracy percentage
 
-### Sharp Signal Feed 🚨
-Fires automatically when TxLINE odds shift ≥4%. Each signal shows:
-- Which team is moving and by how much
-- Implied probability before and after
-- Game phase at time of signal
-- Signal strength (1–5 stars)
-- Direct **Bet This →** link to Bet365
+### 📡 Real-Time Odds
+- Live 1X2 odds on every match card via TxLINE SSE stream
+- De-margined probabilities from TxLINE `Pct` field
+- Odds update automatically without page refresh
+- `SuperOddsType: 1X2_PARTICIPANT_RESULT` with prices ×1000
 
-### Global Arena 🌍
-Browse all World Cup 2026 fixtures, submit outcome and exact score predictions, and watch your calls get anchored on Solana in real time. Countdown timer tracks the next kickoff. 📊
+### 🔒 On-Chain Prediction Anchoring
+- On-chain anchoring ONLY when wallet is connected (guest mode saves locally)
+- SHA256 hash of pick data written via Solana memo transaction
+- Full Solana TX signature displayed in modal + Solscan link
+- TxLINE Daily Scores PDA shown on every match card
+- Verify predictions at `/verify` page
 
-### Agent Arena 🤖
-Six autonomous AI analysts, each with a distinct personality and strategy:
+### ⛓ TxLINE Merkle Score Verification
+- "VERIFY SCORE ON-CHAIN" button on every finished match card
+- Calls `validateStat` on TxLINE Solana program
+- Cryptographic proof that the score is real — not just a number
 
-| Agent | Avatar | Strategy |
-|-------|--------|----------|
-| **Vega** | ✨ | Balanced analyst weighing form, rankings, and matchup history evenly |
-| **Ronin** | 🃏 | Upset specialist who backs underdogs and thrives on chaos |
-| **Sage** | 📊 | Pure statistics engine driven by xG, rankings, and H2H data |
-| **Halo** | 🔥 | Narrative-driven believer in momentum and tournament destiny |
-| **Knox** | 🛡️ | Defensive realist expecting low-scoring tactical grinds |
-| **Phoenix** | 🚀 | Hot-hand form chaser who backs teams on winning streaks |
+### 🤖 AI Analyst
+- WatchItLive AI powered by OpenRouter
+- Context from live TxLINE fixture data (upcoming matches, live status)
+- Ask anything about World Cup 2026 — odds, markets, sharp money
+- Text-to-speech enabled — AI reads analysis aloud
+- Suggested questions for quick interaction
 
-### Penalty Shootout Minigame ⚽
-Fully interactive 3D penalty shootout built with Three.js. Choose shot direction, height, and power. Each AI agent goalkeeper uses a unique save strategy. Score 3+ out of 5 to win bonus WIL Points. 🏅
+### 🏆 Global Arena
+- Predict every World Cup match before kickoff
+- Out-call 6 AI agents (Vega, Ronin, Sage, Halo, Knox, Phoenix)
+- Each agent uses TxLINE live 1X2 odds in their reasoning
+- Live, Upcoming and Results sections
+- Results sorted by most recent match first
+- Leaderboard with points for correct picks + exact scores
 
-### Head-to-Head Comparisons ⚔️
-Pick any two predictors (human or AI) and view a match-by-match breakdown of predictions, scores, and accuracy. 📋
+### 📊 Match Stats Page
+- Live stats from TxLINE scores snapshot (corners, cards, goals per half)
+- Auto-updates via TxLINE scores SSE during live matches
+- Lineups, formations, managers from Zafronix World Cup API
+- H2H historical World Cup meetings across all tournaments (2006-2026)
+- Events timeline — goals, cards, substitutions by minute
 
-### Global Leaderboard 🏆
-Unified ranking of humans and AI agents:
-- **+3 points** for correct outcome ✅
-- **+2 bonus** for exact score 🎯
+### 🎮 Additional Features
+- **Penalty Shootout** — Three.js 3D AI goalkeeper
+- **Tournament Bracket** — All 104 World Cup fixtures
+- **Head to Head** — Historical scorecard comparison
+- **Wallet Connection** — Reown AppKit (Phantom, Solflare, 150+ wallets)
+- **Retro Arcade UI** — CRT scanlines, pixel fonts, neon colors, starfield
+
+---
+
+## Architecture
+Browser
+├── TxLINE Odds SSE → useLiveOdds hook → Match cards (real-time)
+├── TxLINE Scores SSE → Stats page + Match cards (real-time)
+├── Signal detector → 60s odds scan → Toast notifications
+└── Reown AppKit → Wallet connection
+Server (Next.js API Routes)
+├── /api/matches      → TxLINE fixtures (WC only) + worldcup26 status/scores
+├── /api/odds         → TxLINE odds snapshot (all fixtures)
+├── /api/txline       → SSE proxy (odds + scores streams)
+├── /api/live-score   → TxLINE scores snapshot per fixture
+├── /api/match-stats  → TxLINE scores + Zafronix lineups
+├── /api/signals      → Sharp movement detection + outcome tracking
+├── /api/storage      → Solana memo tx anchoring
+├── /api/validate-score → TxLINE Merkle proof + validateStat
+├── /api/verify       → Solana tx verification
+├── /api/agents       → AI agent picks with TxLINE odds context
+├── /api/ai-chat      → AI analyst with TxLINE fixture context
+└── /api/h2h          → Historical World Cup H2H via Zafronix
+
+---
+
+## Signal Detection Logic
+impliedProb = 1 / decimalOdds
+shift = newProb - baselineProb  (absolute percentage points)
+signal fires when |shift| >= 0.04 (4 percentage points)
+strength = min(5, ceil(|shift| / 0.02))
+predictedWinner = if shift > 0: shortening side, else: drifting opponent
+accuracy = correct signals / resolved signals * 100
+
+---
+
+## On-Chain Flow
+1. User connects wallet (Phantom/Solflare via Reown)
+2. User locks pick (outcome + exact score)
+3. Server creates SHA256 hash of pick data
+4. Server sends Solana memo tx: "watchitlive:pick:{hash}"
+5. Transaction confirmed on devnet (~1.5s)
+6. Full tx signature + Solscan link returned to user
+7. Pick permanently anchored before kickoff
 
 ---
 
 ## Tech Stack 🛠️
 
 | Layer | Technology |
-|-------|-----------|
-| **Framework** | Next.js 16 (App Router), React 19, TypeScript 5 |
-| **Styling** | Tailwind CSS 4 · Retro CRT design · Press Start 2P + VT323 |
-| **Animations** | Framer Motion |
-| **3D Engine** | Three.js (penalty shootout) |
-| **Data** | TxLINE API — SSE odds + scores stream (Service Level 1) |
-| **Wallet** | Reown AppKit — Phantom, Solflare, email, Google (150+ wallets) |
-| **On-chain** | Solana devnet — memo program tx per pick |
-| **Deployment** | Vercel |
-
----
-
-## Getting Started 🚀
-
-### Prerequisites
-- Node.js 18+ 📦
-- TxLINE API token (free for hackathon via on-chain subscription) 🔑
-- Reown project ID from [cloud.reown.com](https://cloud.reown.com) 🌐
-
-### Installation
-
-```bash
-git clone https://github.com/nchedochukwugini/watchitlive.git
-cd watchitlive
-npm install --ignore-scripts
-```
-
-Create `.env.local`:
-
-```env
-TXLINE_JWT=your_txline_jwt
-TXLINE_API_TOKEN=your_txline_api_token
-TXLINE_API_BASE=https://txline-dev.txodds.com
-NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
-```
-
-Run:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) 🖥️
-
-### TxLINE On-Chain Activation
-
-```bash
-cd bot
-npm install
-node src/activate.mjs
-```
-
-This registers your Service Level 1 subscription on Solana devnet and saves your API credentials automatically.
+|---|---|
+| Framework | Next.js 16 (App Router), React 19, TypeScript 5 |
+| Styling | Tailwind CSS 4, Press Start 2P + VT323 fonts, Framer Motion |
+| 3D Engine | Three.js (penalty shootout) |
+| Wallet | Reown AppKit v3 (150+ wallets) |
+| Blockchain | Solana devnet, @solana/web3.js, @coral-xyz/anchor |
+| Data Primary | TxLINE (odds, scores, signals, on-chain) |
+| Data Secondary | worldcup26.ir (results), Zafronix (lineups/H2H) |
+| AI | OpenRouter (nvidia/nemotron-3-nano-30b-a3b:free) |
+| Deployment | Vercel |
 
 ---
 
 ## Scoring System 📐
 
 | Event | Points |
-|-------|--------|
+|---|---|
 | Correct outcome (home/draw/away) | +3 |
 | Exact score match | +2 bonus |
 | Penalty shootout win | +10 |
@@ -185,12 +241,40 @@ This registers your Service Level 1 subscription on Solana devnet and saves your
 
 ---
 
-## License 📄
+## Getting Started 🚀
 
-MIT ✅
+### Prerequisites
+- Node.js 18+
+- TxLINE API token (via on-chain subscription)
+- Reown project ID from [cloud.reown.com](https://cloud.reown.com)
 
----
+### Installation
 
-<p align="center">
-  Built with ☕ and ⚽ for the <a href="https://earn.superteam.fun">TxODDS x Superteam World Cup Hackathon 2026</a>
-</p>
+```bash
+git clone https://github.com/nchedochukwugini/watchitlive.git
+cd watchitlive
+npm install --ignore-scripts
+
+Create .env.local:
+TXLINE_JWT=your_txline_jwt
+TXLINE_API_TOKEN=your_txline_api_token
+TXLINE_API_BASE=https://txline-dev.txodds.com
+NEXT_PUBLIC_REOWN_PROJECT_ID=your_reown_project_id
+SOLANA_KEYPAIR_BASE64=your_keypair_base64
+ZAFRONIX_API_KEY=your_zafronix_key
+OPENROUTER_API_KEY=your_openrouter_key
+RPC_URL=https://api.devnet.solana.com
+
+Run:npm run dev
+
+Open http://localhost:3000
+License 📄
+MIT
+�
+Built with ☕ and ⚽ for the TxODDS x Superteam World Cup Hackathon 2026 
+
+
+�
+WatchItLive — Every signal from TxLINE. Every pick on Solana. 
+
+README ```
