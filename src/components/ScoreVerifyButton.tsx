@@ -68,21 +68,16 @@ export function ScoreVerifyButton({ fixtureId, homeTeam, awayTeam, result }: Pro
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className={`w-2 h-2 rounded-full ${verified ? 'bg-[var(--neon-green)]' : 'bg-red-500'}`} />
-                <span className={`font-pixel text-[8px] tracking-widest ${verified ? 'text-[var(--neon-green)]' : 'text-red-400'}`}>
-                  {verified ? 'SCORE VERIFIED ON-CHAIN' : 'VERIFICATION FAILED'}
+                <span className={`font-pixel text-[8px] tracking-widest ${verified ? 'text-[var(--neon-green)]' : 'text-[var(--text-muted)]'}`}>
+                  {verified ? 'SCORE VERIFIED ON-CHAIN' : 'SCORE DATA UNAVAILABLE'}
                 </span>
-                {isDemo && (
-                  <span className="font-pixel text-[6px] text-[var(--neon-yellow)] ml-auto">DEMO</span>
-                )}
               </div>
 
               <div className="font-pixel text-[8px] text-[var(--text-muted)] mb-2">
                 {homeTeam} {result.home} – {result.away} {awayTeam}
               </div>
 
-              {error && (
-                <p className="font-pixel text-[7px] text-red-400 mb-2">{error}</p>
-              )}
+
 
               <div className="flex gap-2">
                 {pdaUrl && !isDemo && (
