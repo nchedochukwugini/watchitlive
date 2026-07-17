@@ -32,7 +32,13 @@ export function ScoreVerifyButton({ fixtureId, homeTeam, awayTeam, result }: Pro
       setPdaUrl(data.solscanUrl || null);
       setIsDemo(data.demo || false);
       setError(data.error || null);
-      setExpanded(true);
+      // Only expand if verified or has real PDA url
+      if (data.valid || (!data.demo && data.solscanUrl)) {
+        setExpanded(true);
+      } else {
+        // No data available - reset silently
+        setVerified(null);
+      }
     } catch {
       setError('Network error');
     } finally {
