@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Match, Pick, LiveOdds } from '@/lib/types';
 import { CountdownTimer } from './CountdownTimer';
@@ -9,6 +10,7 @@ import { getFlagUrl } from '@/lib/countries';
 import { getOutcomeFromResult } from '@/lib/scoring';
 import { ScoreVerifyButton } from './ScoreVerifyButton';
 import { DailyScoresPDA } from './DailyScoresPDA';
+import { LiveCommentary } from './LiveCommentary';
 
 interface MatchCardProps {
   match: Match;
@@ -21,6 +23,7 @@ interface MatchCardProps {
 export function MatchCard({ match, onPick, userPick, index, odds }: MatchCardProps) {
   // Poll live score every 30s for live matches
   const [liveMinute, setLiveMinute] = useState<number | null>(match.minute || null);
+  const [showCommentary, setShowCommentary] = useState(false);
   const [liveScore, setLiveScore]   = useState(match.result);
 
   useEffect(() => {
@@ -140,6 +143,30 @@ export function MatchCard({ match, onPick, userPick, index, odds }: MatchCardPro
 
       {/* Daily Scores PDA */}
       <DailyScoresPDA kickoffTime={match.kickoffTime} />
+
+      {/* Live Commentary button */}
+      {isLive && (
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setShowCommentary(true)}
+          className="mt-2 w-full font-pixel text-[8px] py-2 border border-[var(--neon-green)]/40 text-[var(--neon-green)] bg-[var(--neon-green)]/5 hover:bg-[var(--neon-green)]/10 transition-colors tracking-widest flex items-center justify-center gap-2"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
+          LIVE COMMENTARY + TTS
+        </motion.button>
+      )}
+
+      {/* Commentary panel */}
+      <AnimatePresence>
+        {showCommentary && (
+          <LiveCommentary
+            fixtureId={match.id}
+            home={match.homeTeam}
+            away={match.awayTeam}
+            onClose={() => setShowCommentary(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Stats link */}
       <Link
