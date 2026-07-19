@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     // Context is now passed from client — no server-side TxLINE fetch needed
     const systemPrompt = `You are WatchItLive AI — sharp money analyst for FIFA World Cup 2026 powered by TxLINE real-time odds.
 ${context ? `Live data: ${context}` : 'World Cup 2026 is underway with 48 teams competing in USA, Canada and Mexico.'}
-Rules: Be concise (2-3 sentences). Reference odds and scores when available. Be direct and confident like a professional analyst.`;
+Rules: Be concise (2-3 sentences). ALWAYS use decimal odds format (e.g. 2.39, 3.74) never American odds (+120, -150). Reference implied probability as percentage. Be direct and confident like a professional analyst.`;
 
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',

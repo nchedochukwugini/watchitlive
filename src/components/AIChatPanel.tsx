@@ -50,6 +50,18 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       const res = await fetch('/api/txline', { signal: AbortSignal.timeout(2000) });
       if (!res.ok) return '';
       const creds = await res.json();
+      // Also fetch live odds
+      let oddsContext = '';
+      try {
+        const oddsRes = await fetch('/api/odds');
+        if (oddsRes.ok) {
+          const oddsMap = await oddsRes.json();
+          const oddsLines = Object.entries(oddsMap).slice(0,5).map(([id, o]: any) => 
+            `Fixture ${id}: Home ${o.home?.toFixed(2)} (${o.homePct?.toFixed(1) || (1/o.home*100).toFixed(1)}%) Draw ${o.draw?.toFixed(2)} Away ${o.away?.toFixed(2)} (${o.awayPct?.toFixed(1) || (1/o.away*100).toFixed(1)}%)`
+          ).join(', ');
+          if (oddsLines) oddsContext = ' Live TxLINE odds: ' + oddsLines;
+        }
+      } catch {}
       const fRes  = await fetch(`${creds.apiBase}/api/fixtures/snapshot`, {
         headers: { 'Authorization': `Bearer ${creds.jwt}`, 'X-Api-Token': creds.token },
         signal: AbortSignal.timeout(2000),
@@ -64,7 +76,7 @@ export function AIChatPanel({ onClose }: { onClose: () => void }) {
       }).map((f: any) => `${f.Participant1} vs ${f.Participant2} (live)`).join(', ');
       const upcoming = fixtures.filter((f: any) => f.StartTime > now)
         .slice(0, 3).map((f: any) => `${f.Participant1} vs ${f.Participant2}`).join(', ');
-      return [live, upcoming].filter(Boolean).join('. Upcoming: ');
+      return [live, upcoming].filter(Boolean).join('. Upcoming: ') + oddsContext;
     } catch { return ''; }
   };
 
